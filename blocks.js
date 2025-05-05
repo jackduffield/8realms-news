@@ -1,14 +1,19 @@
-( function( blocks, blockEditor, element ) {
+( function( blocks, blockEditor, element, components ) {
     var el = element.createElement;
+    var ServerSideRender = components.ServerSideRender;
+
     blocks.registerBlockType('news/newsfeed', {
         title: 'News Feed',
         icon: 'rss',
         category: 'widgets',
         edit: function() {
-            return el('p', {}, '8Realms News Feed preview in editor.');
+            return el(ServerSideRender, {
+                block: 'news/newsfeed',
+            });
         },
         save: function() {
-            return el('div', { className: 'news-feed' }, 'News Feed will render here.');
+            // The content is rendered server-side, so save function returns null.
+            return null;
         }
     });
-} )( window.wp.blocks, window.wp.blockEditor, window.wp.element );
+} )( window.wp.blocks, window.wp.blockEditor, window.wp.element, window.wp.components );

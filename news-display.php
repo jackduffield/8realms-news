@@ -6,9 +6,9 @@ defined('ABSPATH') || exit;
  */
 add_shortcode('news', 'news_render_feed');
 function news_render_feed($atts) {
-    // Fetch cached items and sort newest first
-    $items = get_transient('news_feed_items') ?: [];
-    usort($items, fn($a, $b) => $b['date'] <=> $a['date']);
+    global $wpdb;
+    $items_table = $wpdb->prefix . 'news_items';
+    $items = $wpdb->get_results("SELECT * FROM $items_table ORDER BY date DESC", ARRAY_A);
 
     if (empty($items)) {
         return '<p>' . esc_html__('No news items found.', '8realms-news') . '</p>';
@@ -16,13 +16,9 @@ function news_render_feed($atts) {
 
     ob_start(); ?>
 
-    <div class="news-search" style="margin-bottom:1em;">
-        <input type="text" id="news-search-input" placeholder="<?php esc_attr_e('Search news...', '8realms-news'); ?>" style="width:100%; padding:.5em;" />
-    </div>
-
     <div class="news-feed">
         <?php foreach ($items as $item): ?>
-            <div class="news-card" style="display:flex; flex-wrap:wrap; margin-bottom:1.5em; border:1px solid #ddd; border-left:4px solid var(--wp--preset--color--accent3); padding:1em;">
+            <div class="news-card" data-type="<?php echo esc_attr($item['type']); ?>" style="display:flex; flex-wrap:wrap; margin-bottom:1.5em; border:1px solid #ddd; border-left:4px solid var(--wp--preset--color--accent3); padding:1em;">
 
                 <?php if (!empty($item['thumbnail'])): ?>
                     <div class="news-card-thumbnail" style="flex:0 0 120px; margin-right:1em;">
@@ -40,24 +36,12 @@ function news_render_feed($atts) {
                         <?php echo wp_kses_post(wp_trim_words($item['summary'], 30)); ?>
                     </p>
                     <small class="has-accent3-color" style="font-size:.85em;">
-                        <?php echo esc_html($item['source_name']); ?> &mdash; <?php echo date_i18n(get_option('date_format'), intval($item['date'])); ?>
+                        <?php echo esc_html($item['source_name']); ?> &mdash; <?php echo date_i18n(get_option('date_format'), strtotime($item['date'])); ?>
                     </small>
                 </div>
             </div>
         <?php endforeach; ?>
     </div>
-
-    <script>
-    (function(){
-        var input = document.getElementById('news-search-input');
-        input.addEventListener('input', function(){
-            var term = input.value.toLowerCase();
-            document.querySelectorAll('.news-card').forEach(function(card){
-                card.style.display = card.textContent.toLowerCase().includes(term) ? '' : 'none';
-            });
-        });
-    })();
-    </script>
 
     <?php return ob_get_clean();
 }
