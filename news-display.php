@@ -1,10 +1,10 @@
 <?php
 defined('ABSPATH') || exit;
 
-add_shortcode('8realms_news', '8realms_news_render_feed');
+add_shortcode('news', 'news_render_feed');
 
-function 8realms_news_render_feed($atts) {
-    $items = get_transient('8realms_news_feed_items') ?: [];
+function news_render_feed($atts) {
+    $items = get_transient('news_feed_items') ?: [];
     ob_start();
     ?>
     <div class="8realms-news-search">

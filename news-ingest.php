@@ -4,11 +4,11 @@ defined('ABSPATH') || exit;
 /**
  * Create DB tables for RSS feeds and filters
  */
-function 8realms_news_create_db() {
+function news_create_db() {
     global $wpdb;
     $charset = $wpdb->get_charset_collate();
-    $feeds_table   = $wpdb->prefix . '8realms_news_feeds';
-    $filters_table = $wpdb->prefix . '8realms_news_filters';
+    $feeds_table   = $wpdb->prefix . 'news_feeds';
+    $filters_table = $wpdb->prefix . 'news_filters';
 
     $sql = "
     CREATE TABLE $feeds_table (
@@ -31,8 +31,8 @@ function 8realms_news_create_db() {
 /**
  * Fetch and cache items for all registered feeds
  */
-function 8realms_news_fetch_all_feeds() {
-    $feeds = get_option('8realms_news_feeds', []);
+function news_fetch_all_feeds() {
+    $feeds = get_option('news_feeds', []);
     $all_items = [];
     foreach ($feeds as $feed) {
         $rss = fetch_feed($feed['url']);
@@ -40,7 +40,7 @@ function 8realms_news_fetch_all_feeds() {
             $maxitems = $rss->get_item_quantity(20);
             $items = $rss->get_items(0, $maxitems);
             // Filter by keywords
-            $filters = get_option("8realms_news_filters_{$feed['id']}", []);
+            $filters = get_option("news_filters_{$feed['id']}", []);
             foreach ($items as $item) {
                 $content = $item->get_title() . ' ' . $item->get_description();
                 $match = empty($filters) || array_filter($filters, fn($kw) => stripos($content, $kw) !== false);
@@ -58,5 +58,5 @@ function 8realms_news_fetch_all_feeds() {
         }
     }
     // Cache for front-end
-    set_transient('8realms_news_feed_items', $all_items, HOUR_IN_SECONDS);
+    set_transient('news_feed_items', $all_items, HOUR_IN_SECONDS);
 }

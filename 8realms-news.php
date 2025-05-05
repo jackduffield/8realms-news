@@ -19,19 +19,19 @@ require_once REALMS_NEWS_PATH . 'news-management.php';
 require_once REALMS_NEWS_PATH . 'news-display.php';
 
 // Activation & deactivation hooks
-register_activation_hook(__FILE__,   '8realms_news_activate');
-register_deactivation_hook(__FILE__, '8realms_news_deactivate');
+register_activation_hook(__FILE__,   'news_activate');
+register_deactivation_hook(__FILE__, 'news_deactivate');
 
-function 8realms_news_activate() {
-    8realms_news_create_db();
-    if (! wp_next_scheduled('8realms_news_cron')) {
-        wp_schedule_event(time(), 'hourly', '8realms_news_cron');
+function news_activate() {
+    news_create_db();
+    if (! wp_next_scheduled('news_cron')) {
+        wp_schedule_event(time(), 'hourly', 'news_cron');
     }
 }
 
-function 8realms_news_deactivate() {
-    wp_clear_scheduled_hook('8realms_news_cron');
+function news_deactivate() {
+    wp_clear_scheduled_hook('news_cron');
 }
 
 // Cron hook to fetch feeds
-add_action('8realms_news_cron', '8realms_news_fetch_all_feeds');
+add_action('news_cron', 'news_fetch_all_feeds');

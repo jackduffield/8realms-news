@@ -1,32 +1,32 @@
 <?php
 defined('ABSPATH') || exit;
 
-add_action('admin_menu', '8realms_news_admin_menu');
-add_action('admin_init', '8realms_news_register_settings');
+add_action('admin_menu', 'news_admin_menu');
+add_action('admin_init', 'news_register_settings');
 
-function 8realms_news_admin_menu() {
+function news_admin_menu() {
     add_menu_page(
         __('8Realms News', '8realms-news'),
         __('8Realms News', '8realms-news'),
         'manage_options',
         '8realms-news',
-        '8realms_news_settings_page',
+        'news_settings_page',
         'dashicons-admin-site'
     );
 }
 
-function 8realms_news_register_settings() {
-    register_setting('8realms_news_group', '8realms_news_feeds');
+function news_register_settings() {
+    register_setting('news_group', 'news_feeds');
 }
 
-function 8realms_news_settings_page() {
+function news_settings_page() {
     if (! current_user_can('manage_options')) return;
-    $feeds = get_option('8realms_news_feeds', []);
+    $feeds = get_option('news_feeds', []);
     ?>
     <div class="wrap">
         <h1><?php _e('8Realms News Feeds', '8realms-news'); ?></h1>
         <form method="post" action="options.php">
-            <?php settings_fields('8realms_news_group'); ?>
+            <?php settings_fields('news_group'); ?>
             <table class="form-table">
                 <thead>
                     <tr><th><?php _e('Name', '8realms-news'); ?></th><th><?php _e('URL', '8realms-news'); ?></th><th><?php _e('Keywords (comma-separated)', '8realms-news'); ?></th></tr>
@@ -34,15 +34,15 @@ function 8realms_news_settings_page() {
                 <tbody>
                 <?php foreach ($feeds as $id => $feed): ?>
                     <tr>
-                        <td><input name="8realms_news_feeds[<?php echo esc_attr($id); ?>][name]" value="<?php echo esc_attr($feed['name']); ?>"></td>
-                        <td><input name="8realms_news_feeds[<?php echo esc_attr($id); ?>][url]" value="<?php echo esc_url($feed['url']); ?>"></td>
-                        <td><input name="8realms_news_feeds[<?php echo esc_attr($id); ?>][keywords]" value="<?php echo esc_attr(implode(',', get_option("8realms_news_filters_{$id}", []))); ?>"></td>
+                        <td><input name="news_feeds[<?php echo esc_attr($id); ?>][name]" value="<?php echo esc_attr($feed['name']); ?>"></td>
+                        <td><input name="news_feeds[<?php echo esc_attr($id); ?>][url]" value="<?php echo esc_url($feed['url']); ?>"></td>
+                        <td><input name="news_feeds[<?php echo esc_attr($id); ?>][keywords]" value="<?php echo esc_attr(implode(',', get_option("news_filters_{$id}", []))); ?>"></td>
                     </tr>
                 <?php endforeach; ?>
                     <tr>
-                        <td><input name="8realms_news_feeds[new][name]" placeholder="Feed Name"></td>
-                        <td><input name="8realms_news_feeds[new][url]" placeholder="Feed URL"></td>
-                        <td><input name="8realms_news_feeds[new][keywords]" placeholder="kw1, kw2"></td>
+                        <td><input name="news_feeds[new][name]" placeholder="Feed Name"></td>
+                        <td><input name="news_feeds[new][url]" placeholder="Feed URL"></td>
+                        <td><input name="news_feeds[new][keywords]" placeholder="kw1, kw2"></td>
                     </tr>
                 </tbody>
             </table>
