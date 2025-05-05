@@ -1,19 +1,7 @@
 <?php
 defined('ABSPATH') || exit;
 
-add_action('admin_menu', 'news_admin_menu');
 add_action('admin_init', 'news_register_settings');
-
-function news_admin_menu() {
-    add_menu_page(
-        __('8Realms News', '8realms-news'),
-        __('8Realms News', '8realms-news'),
-        'manage_options',
-        '8realms-news',
-        'news_settings_page',
-        'dashicons-admin-site'
-    );
-}
 
 function news_register_settings() {
     register_setting('news_group', 'news_feeds');
