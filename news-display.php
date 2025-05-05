@@ -18,7 +18,7 @@ function news_render_feed($atts) {
 
     <div class="news-feed">
         <?php foreach ($items as $item): ?>
-            <div class="news-card" data-type="<?php echo esc_attr($item['type']); ?>" style="display:flex; flex-wrap:wrap; margin-bottom:1.5em; border:1px solid #ddd; border-left:4px solid var(--wp--preset--color--accent3); padding:1em;">
+            <div class="news-card" style="display:flex; flex-wrap:wrap; margin-bottom:1.5em; border:1px solid #ddd; border-left:4px solid var(--wp--preset--color--accent3); padding:1em;">
 
                 <?php if (!empty($item['thumbnail'])): ?>
                     <div class="news-card-thumbnail" style="flex:0 0 120px; margin-right:1em;">
@@ -36,7 +36,7 @@ function news_render_feed($atts) {
                         <?php echo wp_kses_post(wp_trim_words($item['summary'], 30)); ?>
                     </p>
                     <small class="has-accent3-color" style="font-size:.85em;">
-                        <?php echo esc_html($item['source_name']); ?> &mdash; <?php echo date_i18n(get_option('date_format'), strtotime($item['date'])); ?>
+                        <?php echo date_i18n(get_option('date_format'), strtotime($item['date'])); ?>
                     </small>
                 </div>
             </div>
