@@ -35,3 +35,28 @@ function news_deactivate() {
 
 // Cron hook to fetch feeds
 add_action('news_cron', 'news_fetch_all_feeds');
+
+add_action('enqueue_block_editor_assets', function() {
+    wp_enqueue_script(
+        '8realms-news-blocks',
+        plugins_url('blocks.js', __FILE__),
+        ['wp-blocks', 'wp-element', 'wp-editor'],
+        '1.0.0',
+        true
+    );
+    wp_enqueue_style(
+        '8realms-news-editor-styles',
+        plugins_url('editor.css', __FILE__),
+        [],
+        '1.0.0'
+    );
+});
+
+add_action('wp_enqueue_scripts', function() {
+    wp_enqueue_style(
+        '8realms-news-frontend-styles',
+        plugins_url('style.css', __FILE__),
+        [],
+        '1.0.0'
+    );
+});

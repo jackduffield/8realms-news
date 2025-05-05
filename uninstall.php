@@ -7,3 +7,8 @@ $wpdb->query("DROP TABLE IF EXISTS {$wpdb->prefix}8realms_news_feeds");
 $wpdb->query("DROP TABLE IF EXISTS {$wpdb->prefix}8realms_news_filters");
 delete_transient('8realms_news_feed_items');
 delete_option('8realms_news_feeds');
+
+$feeds = get_option('news_feeds', []);
+foreach ($feeds as $id => $feed) {
+    delete_option("news_filters_{$id}");
+}
