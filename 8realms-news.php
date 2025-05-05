@@ -4,7 +4,7 @@
  * Description: Aggregates Age of Sigmar news via RSS feeds.
  * Version:     1.0.0
  * Author:      Your Name
- * Text Domain: 8realms-news
+ * Text Domain: news
  * Domain Path: /languages
  */
 
@@ -38,14 +38,14 @@ add_action('news_cron', 'news_fetch_all_feeds');
 
 add_action('enqueue_block_editor_assets', function() {
     wp_enqueue_script(
-        '8realms-news-blocks',
+        'news-blocks',
         plugins_url('blocks.js', __FILE__),
-        ['wp-blocks', 'wp-element', 'wp-editor'],
+        ['wp-blocks', 'wp-element', 'wp-block-editor'],
         '1.0.0',
         true
     );
     wp_enqueue_style(
-        '8realms-news-editor-styles',
+        'news-editor-styles',
         plugins_url('editor.css', __FILE__),
         [],
         '1.0.0'
@@ -54,7 +54,7 @@ add_action('enqueue_block_editor_assets', function() {
 
 add_action('wp_enqueue_scripts', function() {
     wp_enqueue_style(
-        '8realms-news-frontend-styles',
+        'news-frontend-styles',
         plugins_url('style.css', __FILE__),
         [],
         '1.0.0'

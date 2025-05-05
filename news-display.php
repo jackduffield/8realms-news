@@ -7,12 +7,12 @@ function news_render_feed($atts) {
     $items = get_transient('news_feed_items') ?: [];
     ob_start();
     ?>
-    <div class="8realms-news-search">
-        <input type="text" id="8realms-news-search-input" placeholder="<?php esc_attr_e('Search news...', '8realms-news'); ?>">
+    <div class="news-search">
+        <input type="text" id="news-search-input" placeholder="<?php esc_attr_e('Search news...', 'news'); ?>">
     </div>
-    <div class="8realms-news-feed">
+    <div class="news-feed">
         <?php foreach ($items as $item): ?>
-            <div class="8realms-news-card">
+            <div class="news-card">
                 <?php if ($item['thumbnail']): ?><img src="<?php echo esc_url($item['thumbnail']); ?>" alt=""><?php endif; ?>
                 <h3><a href="<?php echo esc_url($item['link']); ?>" target="_blank"><?php echo esc_html($item['title']); ?></a></h3>
                 <p><?php echo wp_kses_post(wp_trim_words($item['summary'], 30)); ?></p>
@@ -22,10 +22,10 @@ function news_render_feed($atts) {
     </div>
     <script>
         (function(){
-            const input = document.getElementById('8realms-news-search-input');
+            const input = document.getElementById('news-search-input');
             input.addEventListener('input', () => {
                 const term = input.value.toLowerCase();
-                document.querySelectorAll('.8realms-news-card').forEach(card => {
+                document.querySelectorAll('.news-card').forEach(card => {
                     card.style.display = card.textContent.toLowerCase().includes(term) ? '' : 'none';
                 });
             });
