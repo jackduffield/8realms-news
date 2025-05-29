@@ -81,7 +81,7 @@ function news_save_feed() {
 // Admin menu
 add_action('admin_menu', 'news_admin_menu');
 function news_admin_menu() {
-    add_menu_page('8realms News', '8realms News', 'manage_options', '8realms-news', 'news_feeds_list_page', 'dashicons-rss', 60);
+    add_menu_page('Manage Newsfeeds', 'Manage Newsfeeds', 'manage_options', '8realms-news', 'news_feeds_list_page', 'dashicons-rss', 60);
     add_submenu_page('8realms-news', 'Add / Edit Feed Source', 'Add / Edit Feed Source', 'manage_options', '8realms-news-edit', 'news_feed_edit_page');
 }
 
@@ -106,7 +106,6 @@ add_action('admin_init', 'news_register_meta_boxes');
 function news_register_meta_boxes() {
     add_meta_box('feed_source_details', __('Feed Source Details','8realms-news'), 'news_meta_box_details', '8realms-news-edit', 'normal', 'high');
     add_meta_box('feed_preview', __('Feed Preview','8realms-news'), 'news_meta_box_preview', '8realms-news-edit', 'normal', 'low');
-    add_meta_box('save_feed_source', __('Save Feed Source','8realms-news'), 'news_meta_box_submit', '8realms-news-edit', 'side', 'default');
 }
 
 // Meta box: details
@@ -133,24 +132,19 @@ function news_meta_box_preview() {
         echo '<ul>';
         foreach ($preview_items as $item) {
             printf(
-                '<li><a href="%s" target="_blank">%s</a> &mdash; %s</li>',
+                '<li><a href="%s" target="_blank">%s</a> &mdash; %s<br><div style="margin-left:1em; color:#555;">%s</div></li>',
                 esc_url($item->get_permalink()),
                 esc_html($item->get_title()),
-                esc_html($item->get_date('F j, Y'))
+                esc_html($item->get_date('F j, Y')),
+                wp_kses_post($item->get_description())
             );
         }
         echo '</ul>';
     } elseif (!empty($error)) {
         echo '<div class="notice notice-error"><p>' . esc_html($error) . '</p></div>';
     }
-    echo '<a href="' . esc_url(add_query_arg(['page'=>'8realms-news-edit', 'preview_url'=>urlencode($url)], admin_url('admin.php'))) . '" class="button">' . __('Preview Feed','8realms-news') . '</a>';
-}
-
-// Meta box: submit
-function news_meta_box_submit() {
-    global $id;
-    submit_button($id ? __('Update Feed Source','8realms-news') : __('Save Feed Source','8realms-news'));
-    echo '<a href="' . esc_url(admin_url('admin-post.php?action=fetch_news_feed_now')) . '" class="button button-primary">' . __('Fetch Events Now','8realms-news') . '</a>';
+    // Preview button as submit
+    echo '<button type="submit" name="preview_feed" value="1" class="button">' . __('Preview Feed','8realms-news') . '</button>';
 }
 
 // Feeds list table and list page (unchanged)...
@@ -220,19 +214,34 @@ function news_feed_edit_page() {
     $feeds_table   = $wpdb->prefix . 'news_feeds';
     $filters_table = $wpdb->prefix . 'news_filters';
     $id            = isset($_GET['feed_id']) ? intval($_GET['feed_id']) : 0;
-    $feed          = $id ? $wpdb->get_row($wpdb->prepare("SELECT * FROM $feeds_table WHERE id = %d", $id)) : null;
-    $name          = $feed ? esc_attr($feed->name) : '';
-    $url           = $feed ? esc_url($feed->url) : '';
-    $active        = $feed ? (bool) $feed->active : true;
-    $type          = $feed ? esc_attr($feed->type) : 'standard';
-    $existing_filters = $id ? $wpdb->get_col($wpdb->prepare("SELECT keyword FROM $filters_table WHERE feed_id = %d", $id)) : [];
-    $filters       = $existing_filters ? implode(',', $existing_filters) : '';
+    // Use POSTed values if previewing, else load from DB
+    $is_preview    = isset($_POST['preview_feed']) && $_POST['preview_feed'] == '1';
+    $name          = $is_preview ? sanitize_text_field($_POST['feed_name']) : ($id ? esc_attr($wpdb->get_var($wpdb->prepare("SELECT name FROM $feeds_table WHERE id = %d", $id))) : '');
+    $url           = $is_preview ? esc_url_raw($_POST['feed_url']) : ($id ? esc_url($wpdb->get_var($wpdb->prepare("SELECT url FROM $feeds_table WHERE id = %d", $id))) : '');
+    $active        = $is_preview ? (isset($_POST['feed_active']) ? true : false) : ($id ? (bool) $wpdb->get_var($wpdb->prepare("SELECT active FROM $feeds_table WHERE id = %d", $id)) : true);
+    $type          = $is_preview ? sanitize_text_field($_POST['feed_type']) : ($id ? esc_attr($wpdb->get_var($wpdb->prepare("SELECT type FROM $feeds_table WHERE id = %d", $id))) : 'standard');
+    $filters       = $is_preview ? sanitize_text_field($_POST['feed_filters']) : ($id ? implode(',', $wpdb->get_col($wpdb->prepare("SELECT keyword FROM $filters_table WHERE feed_id = %d", $id))) : '');
     $preview_items = [];
     $error         = '';
 
-    // Automatically display preview if URL exists
+    // If previewing, or if URL exists, show preview
     if ($url) {
         news_validate_feed_url($url, $preview_items, $error);
+        // Filter preview items by keywords if filters are set
+        if (!empty($filters)) {
+            $keywords = array_filter(array_map('trim', explode(',', $filters)));
+            if (!empty($keywords)) {
+                $preview_items = array_filter($preview_items, function($item) use ($keywords) {
+                    $haystack = strtolower($item->get_title() . ' ' . $item->get_description());
+                    foreach ($keywords as $kw) {
+                        if (stripos($haystack, strtolower($kw)) !== false) {
+                            return true;
+                        }
+                    }
+                    return false;
+                });
+            }
+        }
     }
 
     echo '<div class="wrap">';
@@ -254,7 +263,17 @@ function news_feed_edit_page() {
     echo '</div>';
     // Postbox wrapper
     echo '<div id="poststuff"><div id="post-body" class="metabox-holder columns-2">';
-    echo '<div id="post-body-content">'; do_meta_boxes('8realms-news-edit','normal', null); echo '</div>';
+    echo '<div id="post-body-content">';
+    // Pass variables for meta boxes
+    $GLOBALS['url'] = $url;
+    $GLOBALS['filters'] = $filters;
+    $GLOBALS['preview_items'] = $preview_items;
+    $GLOBALS['error'] = $error;
+    do_meta_boxes('8realms-news-edit','normal', null);
+    // Add a meta box for Active, Type, and Save button
+    echo '<div class="postbox" style="margin-top:20px;">';
+    echo '<h2 class="hndle"><span>' . __('Feed Settings & Actions','8realms-news') . '</span></h2>';
+    echo '<div class="inside">';
     echo '<table class="form-table">';
     echo '<tr><th><label for="feed_active">' . __('Active','8realms-news') . '</label></th>';
     echo '<td><input type="checkbox" name="feed_active" id="feed_active" value="1" ' . checked($active, true, false) . '></td></tr>';
@@ -265,7 +284,13 @@ function news_feed_edit_page() {
     echo '<option value="youtube" ' . selected($type, 'youtube', false) . '>' . __('YouTube','8realms-news') . '</option>';
     echo '</select></td></tr>';
     echo '</table>';
-    echo '<div id="postbox-container-1" class="postbox-container">'; do_meta_boxes('8realms-news-edit','side', null); echo '</div>';
+    echo '<p><button type="submit" class="button button-primary" name="save_feed_source" value="1">' . __('Save Feed Source','8realms-news') . '</button></p>';
+    echo '</div></div>';
+    echo '</div>';
+    echo '<div id="postbox-container-1" class="postbox-container">';
+    // Remove the save meta box from the sidebar
+    // do_meta_boxes('8realms-news-edit','side', null);
+    echo '</div>';
     echo '</div></div>';
     echo '</form></div>';
 }
