@@ -28,7 +28,8 @@ function news_create_db() {
       name tinytext NOT NULL,
       url text NOT NULL,
       active tinyint(1) NOT NULL DEFAULT 1,
-      type varchar(20) NOT NULL DEFAULT 'standard',
+      type varchar(20) NOT NULL DEFAULT 'article',
+      icon_url text,
       PRIMARY KEY  (id)
     ) $charset;
     CREATE TABLE $filters_table (
@@ -44,7 +45,6 @@ function news_create_db() {
       link text NOT NULL,
       date datetime NOT NULL,
       summary text,
-      thumbnail text,
       PRIMARY KEY  (id)
     ) $charset;
     ";
@@ -91,6 +91,15 @@ add_action('enqueue_block_editor_assets', function() {
     );
 });
 
+// Register block server-side with render callback
+add_action('init', function() {
+    if (function_exists('register_block_type')) {
+        register_block_type('news/newsfeed', [
+            'render_callback' => 'news_render_feed',
+        ]);
+    }
+});
+
 // Code to fetch RSS data and filter based on keywords
 // Includes periodic updates to check for new posts
 
@@ -101,5 +110,4 @@ add_action('wp_enqueue_scripts', function() {
         [],
         '1.0.0'
     );
-    wp_enqueue_script( 'news-script', plugins_url( 'js/news-script.js', __FILE__ ), array( 'jquery' ), null, true );
 });
